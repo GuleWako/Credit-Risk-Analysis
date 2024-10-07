@@ -76,7 +76,7 @@ def extractDateAndTime(new_dataframe):
     new_dataframe['TransactionYear'] = new_dataframe['TransactionStartTime'].dt.year
     return new_dataframe
 def encodingCategoricalVariables(new_dataframe):
-    categorical_columns = ['CurrencyCode', 'ProviderId', 'ProductId', 'ProductCategory','ChannelId']
+    categorical_columns = ['CurrencyCode', 'ProductCategory']
     encoder = OneHotEncoder(sparse_output=False, drop='first')  
     encoded_data = encoder.fit_transform(new_dataframe[categorical_columns])
     encoded_new_dataframe = pd.DataFrame(encoded_data, columns=encoder.get_feature_names_out(categorical_columns))
@@ -118,8 +118,8 @@ def calculateRFMSscores(new_dataframe_encoded):
                             rfms_new_dataframe_encoded['Monetary'] +
                             rfms_new_dataframe_encoded['Seasonality'])
 
-    # Normalize the RFMS scores between 0 and 1
-    rfms_new_dataframe_encoded['RFMS_Score'] = (rfms_new_dataframe_encoded['RFMS_Score'] - rfms_new_dataframe_encoded['RFMS_Score'].min()) / (rfms_new_dataframe_encoded['RFMS_Score'].max() - rfms_new_dataframe_encoded['RFMS_Score'].min())
+    # # Normalize the RFMS scores between 0 and 1
+    # rfms_new_dataframe_encoded['RFMS_Score'] = (rfms_new_dataframe_encoded['RFMS_Score'] - rfms_new_dataframe_encoded['RFMS_Score'].min()) / (rfms_new_dataframe_encoded['RFMS_Score'].max() - rfms_new_dataframe_encoded['RFMS_Score'].min())
     return rfms_new_dataframe_encoded
 def visualizeRFMSscore(rfms_new_dataframe_encoded):
     # Plot the histogram of RFMS scores
