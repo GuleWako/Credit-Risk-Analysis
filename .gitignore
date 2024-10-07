@@ -2,4 +2,4 @@ pycache/
 .venv
 .env
 docs
-*.joblib
+*.pkl
