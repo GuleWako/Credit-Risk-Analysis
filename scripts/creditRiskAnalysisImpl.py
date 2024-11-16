@@ -6,21 +6,47 @@ from sklearn.preprocessing import OneHotEncoder
 
 
 def dataLoading():
+    """
+       Loads a CSV file into a Pandas DataFrame.
+
+       Returns:
+           pd.DataFrame: DataFrame containing the loaded data.
+       """
     return pd.read_csv('docs/data.csv')
 def distOfNumericalColumns(data,numerical_columns):
+    """
+       Plots the distribution (histogram and KDE) of numerical columns.
+
+       Parameters:
+           data (pd.DataFrame): The dataset containing numerical columns.
+           numerical_columns (list): List of numerical column names to plot.
+       """
     for col in numerical_columns:
         plt.figure(figsize=(10, 6))
         sns.histplot(data[col],bins=50, kde=True)
         plt.title(f'Distribution of {col}')
         plt.show()
 def distOfCategoricalColumns(data,categorical_columns):
+    """
+       Plots the distribution (count plots) of categorical columns.
+
+       Parameters:
+           data (pd.DataFrame): The dataset containing categorical columns.
+           categorical_columns (list): List of categorical column names to plot.
+       """
     for col in categorical_columns:
         plt.figure(figsize=(20, 6))
         sns.countplot(data=data, x=data[col])
         plt.title(f'Distribution of {col}')
-        plt.xticks(rotation=45) 
+        plt.xticks(rotation=45)
         plt.show()
 def correlationOfNumColumns(data):
+    """
+        Plots the correlation matrix of numerical columns.
+
+        Parameters:
+            data (pd.DataFrame): The dataset to compute correlations.
+        """
     numerical_data=data.select_dtypes(include=['float64', 'int64'])
     if 'CountryCode' in numerical_data.columns:
         numerical_data=numerical_data.drop(['CountryCode'],axis=1)
@@ -30,6 +56,15 @@ def correlationOfNumColumns(data):
     plt.title('Correlation Matrix')
     plt.show()
 def find_missing_values(df):
+    """
+        Finds and summarizes missing values in the dataset.
+
+        Parameters:
+            df (pd.DataFrame): The dataset to analyze.
+
+        Returns:
+            pd.DataFrame: Summary table of missing values, percentages, and data types.
+        """
     null_counts = df.isnull().sum()
     missing_value = null_counts
     percent_of_missing_value = 100 * null_counts / len(df)
@@ -44,11 +79,28 @@ def find_missing_values(df):
     return missing_data_summary_table
 
 def boxPlotForDetectOutliers(data,column_names):
+    """
+       Plots box plots for numerical columns to detect outliers.
+
+       Parameters:
+           data (pd.DataFrame): The dataset containing numerical columns.
+           column_names (list): List of column names to plot box plots.
+       """
     for column in column_names:
         sns.boxplot(data=data[column])
         plt.title(f"Box Plot of {column}")
         plt.show()
 def remove_outliers_winsorization(data,column_names):
+    """
+        Removes outliers from specified columns using winsorization (clipping).
+
+        Parameters:
+            data (pd.DataFrame): The dataset containing numerical columns.
+            column_names (list): List of column names to apply winsorization.
+
+        Returns:
+            pd.DataFrame: Dataset with outliers clipped.
+        """
     for column_name in column_names:
         q1 = data[column_name].quantile(0.25)
         q3 = data[column_name].quantile(0.75)
@@ -58,6 +110,15 @@ def remove_outliers_winsorization(data,column_names):
         data[column_name] = data[column_name].clip(lower_bound, upper_bound)
     return data
 def aggregateFeatures(data):
+    """
+       Aggregates transaction data by customer.
+
+       Parameters:
+           data (pd.DataFrame): The dataset containing transaction details.
+
+       Returns:
+           pd.DataFrame: Aggregated data with total, mean, count, and std of transaction amounts.
+       """
     # Aggregate features by customer (AccountId)
     agg_data = data.groupby('AccountId').agg(
         TotalTransactionAmount=('Amount', 'sum'),
@@ -67,6 +128,15 @@ def aggregateFeatures(data):
     ).reset_index()
     return agg_data
 def extractDateAndTime(new_dataframe):
+    """
+        Extracts date and time features from a datetime column.
+
+        Parameters:
+            new_dataframe (pd.DataFrame): Dataset containing a datetime column 'TransactionStartTime'.
+
+        Returns:
+            pd.DataFrame: Dataset with new time-based features.
+        """
     # Converting TransactionStartTime to datetime format
     new_dataframe['TransactionStartTime'] = pd.to_datetime(new_dataframe['TransactionStartTime'])
 
@@ -77,14 +147,32 @@ def extractDateAndTime(new_dataframe):
     new_dataframe['TransactionYear'] = new_dataframe['TransactionStartTime'].dt.year
     return new_dataframe
 def encodingCategoricalVariables(new_dataframe):
+    """
+        Encodes categorical variables using OneHotEncoding.
+
+        Parameters:
+            new_dataframe (pd.DataFrame): Dataset containing categorical columns.
+
+        Returns:
+            pd.DataFrame: Dataset with encoded categorical variables.
+        """
     categorical_columns = ['CurrencyCode', 'ProductCategory']
-    encoder = OneHotEncoder(sparse_output=False, drop='first')  
+    encoder = OneHotEncoder(sparse_output=False, drop='first')
     encoded_data = encoder.fit_transform(new_dataframe[categorical_columns])
     encoded_new_dataframe = pd.DataFrame(encoded_data, columns=encoder.get_feature_names_out(categorical_columns))
     new_dataframe_encoded = pd.concat([new_dataframe.reset_index(drop=True), encoded_new_dataframe], axis=1)
     new_dataframe_encoded.drop(columns=categorical_columns, inplace=True)
     return new_dataframe_encoded
 def calculateRFMSscores(new_dataframe_encoded):
+    """
+        Calculates RFMS (Recency, Frequency, Monetary, Seasonality) scores for customers.
+
+        Parameters:
+            new_dataframe_encoded (pd.DataFrame): Dataset with encoded features.
+
+        Returns:
+            pd.DataFrame: Dataset with calculated RFMS scores.
+        """
     # Ensure TransactionStartTime is in datetime format
     new_dataframe_encoded['TransactionStartTime'] = pd.to_datetime(new_dataframe_encoded['TransactionStartTime'])
 
@@ -123,6 +211,12 @@ def calculateRFMSscores(new_dataframe_encoded):
     # rfms_new_dataframe_encoded['RFMS_Score'] = (rfms_new_dataframe_encoded['RFMS_Score'] - rfms_new_dataframe_encoded['RFMS_Score'].min()) / (rfms_new_dataframe_encoded['RFMS_Score'].max() - rfms_new_dataframe_encoded['RFMS_Score'].min())
     return rfms_new_dataframe_encoded
 def visualizeRFMSscore(rfms_new_dataframe_encoded):
+    """
+       Visualizes RFMS scores as a histogram.
+
+       Parameters:
+           rfms_new_dataframe_encoded (pd.DataFrame): Dataset containing RFMS scores.
+       """
     # Plot the histogram of RFMS scores
     plt.figure(figsize=(8,6))
     plt.hist(rfms_new_dataframe_encoded['RFMS_Score'], bins=30, color='blue', alpha=0.7)
@@ -132,6 +226,17 @@ def visualizeRFMSscore(rfms_new_dataframe_encoded):
     plt.show()
     
 def calculate_woe_iv(data, feature, target):
+    """
+       Calculates Weight of Evidence (WoE) and Information Value (IV) for a given feature.
+
+       Parameters:
+           data (pd.DataFrame): Dataset containing the feature and target variable.
+           feature (str): The feature column to analyze.
+           target (str): The target variable column.
+
+       Returns:
+           pd.DataFrame: DataFrame with unique values, WoE, and IV for the feature.
+       """
     lst = []
     unique_values = data[feature].unique()
     total_good = len(data[data[target] == 1])
