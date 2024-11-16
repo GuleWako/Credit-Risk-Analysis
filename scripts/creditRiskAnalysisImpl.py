@@ -22,8 +22,9 @@ def distOfCategoricalColumns(data,categorical_columns):
         plt.show()
 def correlationOfNumColumns(data):
     numerical_data=data.select_dtypes(include=['float64', 'int64'])
-    corr_numerical_columns=numerical_data.drop(['CountryCode'],axis=1)
-    correlation_matrix=corr_numerical_columns.corr()
+    if 'CountryCode' in numerical_data.columns:
+        numerical_data=numerical_data.drop(['CountryCode'],axis=1)
+    correlation_matrix=numerical_data.corr()
     plt.figure(figsize=(12, 8))
     sns.heatmap(correlation_matrix, annot=True, fmt=".2f", cmap='coolwarm', square=True, cbar_kws={"shrink": .8})
     plt.title('Correlation Matrix')
